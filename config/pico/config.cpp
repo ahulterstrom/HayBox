@@ -36,11 +36,11 @@ GpioButtonMapping button_mappings[] = {
     { &InputState::start,       0 },
     { &InputState::home,        11},
 
-    { &InputState::c_left,      13},
-    { &InputState::c_up,        12},
-    { &InputState::c_down,      15},
+    { &InputState::c_left,      15},
+    { &InputState::c_up,        13},
+    { &InputState::c_down,      16},
     { &InputState::a,           14},
-    { &InputState::c_right,     16},
+    { &InputState::c_right,     12},
 
     { &InputState::b,           26},
     { &InputState::x,           21},
@@ -89,15 +89,23 @@ void setup() {
     CommunicationBackend *primary_backend;
     if (console == ConnectedConsole::NONE) {
         if (button_holds.x) {
-            // If no console detected and X is held on plugin then use Switch USB backend.
-            NintendoSwitchBackend::RegisterDescriptor();
-            backend_count = 1;
-            primary_backend = new NintendoSwitchBackend(input_sources, input_source_count);
-            backends = new CommunicationBackend *[backend_count] { primary_backend };
+            // // If no console detected and X is held on plugin then use Switch USB backend.
+            // NintendoSwitchBackend::RegisterDescriptor();
+            // backend_count = 1;
+            // primary_backend = new NintendoSwitchBackend(input_sources, input_source_count);
+            // backends = new CommunicationBackend *[backend_count] { primary_backend };
 
-            // Default to Ultimate mode on Switch.
-            primary_backend->SetGameMode(new Ultimate(socd::SOCD_2IP));
-            return;
+            // // Default to Ultimate mode on Switch.
+            // primary_backend->SetGameMode(new Ultimate(socd::SOCD_2IP));
+            // return;
+
+            // Actually hold X for XInput mode
+            backend_count = 2;
+            primary_backend = new XInputBackend(input_sources, input_source_count);
+            backends = new CommunicationBackend *[backend_count] {
+                primary_backend, new B0XXInputViewer(input_sources, input_source_count)
+            };
+
         } else if (button_holds.z) {
             // If no console detected and Z is held on plugin then use DInput backend.
             TUGamepad::registerDescriptor();
@@ -108,12 +116,22 @@ void setup() {
                 primary_backend, new B0XXInputViewer(input_sources, input_source_count)
             };
         } else {
-            // Default to XInput mode if no console detected and no other mode forced.
-            backend_count = 2;
-            primary_backend = new XInputBackend(input_sources, input_source_count);
-            backends = new CommunicationBackend *[backend_count] {
-                primary_backend, new B0XXInputViewer(input_sources, input_source_count)
-            };
+            // // Default to XInput mode if no console detected and no other mode forced.
+            // backend_count = 2;
+            // primary_backend = new XInputBackend(input_sources, input_source_count);
+            // backends = new CommunicationBackend *[backend_count] {
+            //     primary_backend, new B0XXInputViewer(input_sources, input_source_count)
+            // };
+
+            // Actually default to Nintendo Switch
+            NintendoSwitchBackend::RegisterDescriptor();
+            backend_count = 1;
+            primary_backend = new NintendoSwitchBackend(input_sources, input_source_count);
+            backends = new CommunicationBackend *[backend_count] { primary_backend };
+
+            // Default to Ultimate mode on Switch.
+            primary_backend->SetGameMode(new Ultimate(socd::SOCD_2IP));
+            return;
         }
     } else {
         if (console == ConnectedConsole::GAMECUBE) {
@@ -129,9 +147,12 @@ void setup() {
     }
 
     // Default to Melee mode.
-    primary_backend->SetGameMode(
-        new Melee20Button(socd::SOCD_2IP_NO_REAC, { .crouch_walk_os = false })
-    );
+    // primary_backend->SetGameMode(
+    //     new Melee20Button(socd::SOCD_2IP_NO_REAC, { .crouch_walk_os = false })
+    // );
+
+    // Actually default to Ultimate
+    primary_backend->SetGameMode(new Ultimate(socd::SOCD_2IP));
 }
 
 void loop() {
